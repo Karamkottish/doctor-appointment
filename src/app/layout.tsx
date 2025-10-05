@@ -7,19 +7,17 @@ import "./styles.css";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const { scrollY } = useScroll();
+  const [showTop, setShowTop] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState("");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
 
-  // Navbar blur on scroll
-  useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 40));
+  useMotionValueEvent(scrollY, "change", (y) => {
+    setScrolled(y > 40);
+    setShowTop(y > 400); // Show back-to-top button after 400px scroll
+  });
 
-  // Theme toggle
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-  }, [theme]);
-
-  // Smooth scroll + offset handling
+  // Smooth scroll
   useEffect(() => {
     document.documentElement.style.scrollBehavior = "smooth";
 
@@ -40,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     return () => document.removeEventListener("click", handleClick);
   }, []);
 
-  // Scroll spy effect
+  // Scroll spy
   useEffect(() => {
     const sections = document.querySelectorAll("section[id]");
     const observer = new IntersectionObserver(
@@ -55,14 +53,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     sections.forEach((sec) => observer.observe(sec));
     return () => sections.forEach((sec) => observer.unobserve(sec));
   }, []);
-
-  const nav = [
-    { name: "About", href: "#about" },
-    { name: "Doctors", href: "#doctors" },
-    { name: "Book", href: "#book" },
-    { name: "Reviews", href: "#reviews" },
-    { name: "FAQ", href: "#faq" },
-  ];
 
   return (
     <html lang="en">
@@ -81,19 +71,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </Link>
 
             <nav className="nav__links">
-              {nav.map((l) => (
+              {["about", "doctors", "book", "reviews", "faq"].map((id) => (
                 <motion.a
-                  key={l.name}
-                  href={l.href}
-                  className={`nav-link ${active === l.href.substring(1) ? "active-link" : ""}`}
+                  key={id}
+                  href={`#${id}`}
+                  className={`nav-link ${active === id ? "active-link" : ""}`}
                   whileHover={{ scale: 1.06 }}
-                  whileTap={{ scale: 0.96 }}
                 >
-                  {l.name}
+                  {id.charAt(0).toUpperCase() + id.slice(1)}
                   <motion.span
                     className="nav-underline"
                     initial={{ width: 0 }}
-                    animate={{ width: active === l.href.substring(1) ? "100%" : "0%" }}
+                    animate={{ width: active === id ? "100%" : "0%" }}
                     transition={{ duration: 0.25 }}
                   />
                 </motion.a>
@@ -104,18 +93,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <motion.button
                 className="theme-toggle"
                 onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
-                whileTap={{ rotate: 180, scale: 0.95 }}
-                aria-label="Toggle color theme"
+                whileTap={{ rotate: 180, scale: 0.9 }}
               >
                 {theme === "dark" ? "🌞" : "🌙"}
               </motion.button>
-
-              <motion.a
-                href="#book"
-                className="btn btn--nav"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.98 }}
-              >
+              <motion.a href="#book" className="btn btn--nav" whileHover={{ scale: 1.05 }}>
                 Book Now
               </motion.a>
             </div>
@@ -131,29 +113,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div className="footer__brand">🏥 HealthConnect</div>
               <p>Premium digital healthcare. © {new Date().getFullYear()} HealthConnect.</p>
             </div>
-            <div className="footer__cols">
-              <div>
-                <h4>Company</h4>
-                <a href="#">About</a>
-                <a href="#">Careers</a>
-                <a href="#">Press</a>
-              </div>
-              <div>
-                <h4>Support</h4>
-                <a href="#">Help Center</a>
-                <a href="#">Privacy</a>
-                <a href="#">Terms</a>
-              </div>
-              <div>
-                <h4>Contact</h4>
-                <a href="mailto:hello@healthconnect.app">hello@healthconnect.app</a>
-                <a href="#">Twitter</a>
-                <a href="#">LinkedIn</a>
-              </div>
-            </div>
           </div>
         </footer>
+
+        {/* BACK TO TOP BUTTON */}
+        {showTop && (
+          <motion.button
+            className="back-to-top"
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0 }}
+            transition={{ duration: 0.4 }}
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          >
+            ⬆
+          </motion.button>
+        )}
       </body>
     </html>
   );
 }
+  
